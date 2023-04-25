@@ -25,6 +25,10 @@ import (
 	"github.com/lastbyte32/gofemart/internal/storage/postgres"
 )
 
+const (
+	defaultLogTimeFormat = time.TimeOnly
+)
+
 type Configurator interface {
 	GetApiHost() string
 	GetDSN() string
@@ -45,7 +49,7 @@ func New() (*Server, error) {
 		return nil, err
 	}
 
-	zero := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.TimeOnly}).
+	zero := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: defaultLogTimeFormat}).
 		Level(zerolog.TraceLevel).
 		With().
 		Timestamp().
