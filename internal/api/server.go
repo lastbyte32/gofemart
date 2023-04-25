@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	defaultLogTimeFormat = time.TimeOnly
+// defaultLogTimeFormat = time.TimeOnly
 )
 
 type Configurator interface {
@@ -49,7 +49,7 @@ func New() (*Server, error) {
 		return nil, err
 	}
 
-	zero := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: defaultLogTimeFormat}).
+	zero := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).
 		Level(zerolog.TraceLevel).
 		With().
 		Timestamp().
