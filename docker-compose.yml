@@ -1,0 +1,67 @@
+---
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION}
+    environment:
+       POSTGRES_USER: ${POSTGRES_USER}
+       POSTGRES_DB: ${POSTGRES_DB}
+       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+       TZ: ${TZ}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "${POSTGRES_DB}", "-U", "${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+
+  migrate:
+    image: migrate/migrate
+    volumes:
+      - ./migrations:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://postgres:5432/${POSTGRES_DB}?user=${POSTGRES_USER}&password=${POSTGRES_PASSWORD}&sslmode=disable",
+        "-verbose",
+        "up",
+      ]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+#      context: .
+#      dockerfile: Dockerfile
+#      target: final
+      args:
+        APP_NAME: gophermart
+    environment:
+      API_PORT: ${API_PORT}
+      DATABASE_DSN: ${DATABASE_DSN}
+      LOGS_FORMAT: console
+      TZ: ${TZ}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - ${API_PORT}:${API_PORT}
+    expose:
+      - ${API_PORT}
+    healthcheck:
+      test: ["CMD", "wget", "-nv", "-t1", "--spider", "http://localhost:${API_PORT}/health"]
+      start_period: 5s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+#depends_on:
+#  postgresql:
+#    condition: service_healthy
+
+#    env_file:
+#      - .env
