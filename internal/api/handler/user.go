@@ -54,8 +54,8 @@ func (h *userHandler) authentication(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"error":"jwt create err"}`))
 		return
 	}
-	response := fmt.Sprintf(`{"token":"%s"}`, token)
-	w.Write([]byte(response))
+	response := fmt.Sprintf("Bearer %s", token)
+	w.Header().Set("Authorization", response)
 }
 
 func (h *userHandler) registration(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +101,6 @@ func (h *userHandler) registration(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"error":"jwt create err"}`))
 		return
 	}
-	response := fmt.Sprintf(`{"token":"%s"}`, token)
-	w.Write([]byte(response))
+	response := fmt.Sprintf("Bearer %s", token)
+	w.Header().Set("Authorization", response)
 }
