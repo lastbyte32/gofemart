@@ -14,7 +14,10 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	_ "github.com/jackc/pgx/stdlib"
+	"github.com/golang-migrate/migrate/v4"
+	postgresMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
@@ -73,6 +76,10 @@ func (s *Server) Run(ctx context.Context) error {
 		return err
 	}
 	s.db = db
+	if err := s.Migrate(); err != nil {
+		return err
+	}
+	s.logger.Info().Msg("database migrate complete")
 
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -134,6 +141,22 @@ func (s *Server) configureDataBase(ctx context.Context, dsn string) (*sqlx.DB, e
 
 	s.logger.Info().Msg("database connection successfully")
 	return db, nil
+}
+
+func (s *Server) Migrate() error {
+	dbInstance, err := postgresMigrate.WithInstance(s.db.DB, &postgresMigrate.Config{})
+	if err != nil {
+		return err
+	}
+
+	migrator, err := migrate.NewWithDatabaseInstance("file://migrations", "pgx", dbInstance)
+	if err != nil {
+		return err
+	}
+	if err := migrator.Up(); err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+	return nil
 }
 
 func (s *Server) configureRoutes() (chi.Router, error) {
