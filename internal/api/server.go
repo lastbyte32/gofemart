@@ -25,10 +25,6 @@ import (
 	"github.com/lastbyte32/gofemart/internal/storage/postgres"
 )
 
-const (
-// defaultLogTimeFormat = time.TimeOnly
-)
-
 type Configurator interface {
 	GetApiHost() string
 	GetDSN() string
