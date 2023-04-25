@@ -24,7 +24,7 @@ func NewUserHandler(s service.User) *userHandler {
 }
 
 func (h *userHandler) Routes(router *chi.Mux) {
-	router.Post("/api/users/register", h.registration)
+	router.Post("/api/user/register", h.registration)
 	router.Get("/api/user/login", h.authentication)
 }
 
