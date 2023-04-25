@@ -24,6 +24,7 @@ import (
 
 	"github.com/lastbyte32/gofemart/internal/api/handler"
 	"github.com/lastbyte32/gofemart/internal/config"
+	"github.com/lastbyte32/gofemart/internal/jwt"
 	"github.com/lastbyte32/gofemart/internal/service"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres"
 )
@@ -166,9 +167,10 @@ func (s *Server) configureRoutes() (chi.Router, error) {
 	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Heartbeat("/health"))
 
+	tokenManager, _ := jwt.NewManager("1234")
 	userStorage := postgres.NewUserStore(s.db)
 
-	userService := service.NewUserService(userStorage)
+	userService := service.NewUserService(userStorage, tokenManager)
 
 	userHandler := handler.NewUserHandler(userService)
 	userHandler.Routes(router)

@@ -25,7 +25,7 @@ func NewUserHandler(s service.User) *userHandler {
 
 func (h *userHandler) Routes(router *chi.Mux) {
 	router.Post("/api/user/register", h.registration)
-	router.Get("/api/user/login", h.authentication)
+	router.Post("/api/user/login", h.authentication)
 }
 
 func (h *userHandler) authentication(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +46,21 @@ func (h *userHandler) authentication(w http.ResponseWriter, r *http.Request) {
 		_, err = w.Write([]byte(`{"error":"validation error"}`))
 		return
 	}
-
 	fmt.Printf("LOGIN %s\n", user.Login)
 
+	token, err := h.service.CreateToken(user.Login)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"jwt create err"}`))
+		return
+	}
+	response := fmt.Sprintf(`{"token":"%s"}`, token)
+	w.Write([]byte(response))
 }
 
 func (h *userHandler) registration(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	var user dto.CreateUser
 
 	// 400
@@ -86,4 +95,12 @@ func (h *userHandler) registration(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"error":"service create err"}`))
 		return
 	}
+	token, err := h.service.CreateToken(user.Login)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error":"jwt create err"}`))
+		return
+	}
+	response := fmt.Sprintf(`{"token":"%s"}`, token)
+	w.Write([]byte(response))
 }
