@@ -29,6 +29,7 @@ func (h *userHandler) Routes(router *chi.Mux) {
 }
 
 func (h *userHandler) authentication(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	var user dto.CreateUser
 
 	// 400
