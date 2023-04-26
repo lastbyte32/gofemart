@@ -21,6 +21,9 @@ const (
 )
 
 const (
+	sqlAccrualAmountByUserID     = "SELECT COALESCE(SUM(o.accrual), 0) as sum FROM users u LEFT JOIN orders o ON u.id = o.user_id WHERE u.id = $1 GROUP BY u.id"
+	sqlWithdrawalsAmountByUserID = "SELECT COALESCE(SUM(o.sum), 0) as sum FROM users u LEFT JOIN withdrawals o ON u.id = o.user_id WHERE u.id = $1 GROUP BY u.id"
+
 	sqlGetByLogin = "SELECT * FROM " + tableScheme + " WHERE login = $1"
 
 	sqlGetByTelegramID = "SELECT * FROM " + tableScheme + " WHERE telegram_id = $1"
@@ -36,8 +39,6 @@ const (
 type userStore struct {
 	db *sqlx.DB
 }
-
-type row struct{}
 
 func (s *userStore) GetByTelegramID(ctx context.Context, telegramID int) (*domain.User, error) {
 	var user domain.User
@@ -77,6 +78,24 @@ func (s *userStore) Create(ctx context.Context, u domain.User) (*domain.User, er
 	return &u, nil
 }
 
+func (s *userStore) AccrualAmountByUserID(ctx context.Context, userID string) (float64, error) {
+	var result struct {
+		Sum float64
+	}
+	if err := s.db.GetContext(ctx, &result, sqlAccrualAmountByUserID, userID); err != nil {
+		return 0, err
+	}
+	return result.Sum, nil
+}
+func (s *userStore) WithdrawalsAmountByUserID(ctx context.Context, userID string) (float64, error) {
+	var result struct {
+		Sum float64
+	}
+	if err := s.db.GetContext(ctx, &result, sqlWithdrawalsAmountByUserID, userID); err != nil {
+		return 0, err
+	}
+	return result.Sum, nil
+}
 func NewUserStore(db *sqlx.DB) storage.User {
 	return &userStore{db: db}
 }

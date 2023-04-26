@@ -14,6 +14,7 @@ import (
 type TokenManager interface {
 	NewJWT(userId string, ttl time.Duration) (string, error)
 	Parse(accessToken string) (string, error)
+	JWTMiddleware(next http.Handler) http.Handler
 }
 
 type claims struct {
@@ -75,7 +76,8 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 	bearerStr := strings.Split(authHeader, "Bearer ")
 
 	if len(bearerStr) != 2 {
-		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte(`{"error":"parse auth header err"}`))
 		return nil, errors.New("auth header bad")
 	}
@@ -88,12 +90,14 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 	})
 
 	if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte(`{"error":"token parse err"}`))
 		return nil, err
 	}
 
 	if !parsedToken.Valid {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte(`{"error":"token not valid"}`))
 		return nil, errors.New("token not valid")
@@ -101,6 +105,7 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte(`{"error":"claims err"}`))
 		return nil, errors.New("claims err")

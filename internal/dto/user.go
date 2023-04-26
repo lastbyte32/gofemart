@@ -7,6 +7,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+type Withdraw struct {
+	Order string
+	Sum   float64
+}
+
 type CreateUser struct {
 	Login    string `json:"login" validate:"required"`
 	Password string `json:"password" validate:"required"`

@@ -27,6 +27,8 @@ import (
 	"github.com/lastbyte32/gofemart/internal/jwt"
 	"github.com/lastbyte32/gofemart/internal/service"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres"
+	"github.com/lastbyte32/gofemart/internal/storage/postgres/order"
+	"github.com/lastbyte32/gofemart/internal/storage/postgres/withdraw"
 )
 
 type Configurator interface {
@@ -169,10 +171,17 @@ func (s *Server) configureRoutes() (chi.Router, error) {
 
 	tokenManager, _ := jwt.NewManager("1234")
 	userStorage := postgres.NewUserStore(s.db)
+	orderStorage := order.NewOrderStore(s.db)
+	withdrawStorage := withdraw.NewStore(s.db)
+	orderService := service.NewOrderService(orderStorage)
 
-	userService := service.NewUserService(userStorage, tokenManager)
+	userService := service.NewUserService(userStorage, tokenManager, withdrawStorage)
 
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(
+		userService,
+		tokenManager,
+		orderService,
+	)
 	userHandler.Routes(router)
 
 	s.logger.Info().Msg("route list")
