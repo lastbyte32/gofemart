@@ -110,7 +110,6 @@ func (s *app) Run(ctx context.Context) error {
 	userStore := user.NewStore(s.db)
 
 	accrualClient := accrual.New(s.cfg.GetAccrual())
-
 	w := worker.New(orderStore, accrualClient)
 	go w.Run(ctx)
 	services := service.New(userStore, orderStore, withdrawStore, tokenManager)

@@ -43,7 +43,7 @@ func (h *baseHandler) getAuthUser(ctx context.Context) (*domain.User, error) {
 }
 
 func (h *baseHandler) ResponseJson(w http.ResponseWriter, status int, result any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	var payload []byte
 	var err error
@@ -57,7 +57,7 @@ func (h *baseHandler) ResponseJson(w http.ResponseWriter, status int, result any
 
 func (h *baseHandler) ResponseJsonErr(w http.ResponseWriter, status int, message string) {
 	h.logger.Warn().Msg(message)
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	payload := fmt.Sprintf(`{"error": "%s"}`, message)
 	w.Write([]byte(payload))
