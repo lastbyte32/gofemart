@@ -39,9 +39,8 @@ func (h *baseHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil && errors.Is(err, domain.ErrDuplicateOrderUploadSameUser) {
-		h.ResponseJsonErr(w, http.StatusConflict, "duplicate order upload same user")
+		h.ResponseJsonErr(w, http.StatusOK, "duplicate order upload same user")
 		return
-
 	}
 	if err != nil {
 		errStr := fmt.Sprintf("upload order failed: %s", err)
