@@ -12,12 +12,12 @@ type Withdraw struct {
 	Sum   float64
 }
 
-type CreateUser struct {
+type Credentials struct {
 	Login    string `json:"login" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
-func (user *CreateUser) Validate() error {
+func (user *Credentials) Validate() error {
 	validate := validator.New()
 	err := validate.Struct(user)
 	if err != nil {

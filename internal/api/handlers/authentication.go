@@ -9,7 +9,7 @@ import (
 )
 
 func (h *baseHandler) authentication(w http.ResponseWriter, r *http.Request) {
-	var inputUser dto.CreateUser
+	var inputUser dto.Credentials
 
 	if err := json.NewDecoder(r.Body).Decode(&inputUser); err != nil {
 		h.ResponseJsonErr(w, http.StatusBadRequest, "invalid request")
@@ -28,7 +28,9 @@ func (h *baseHandler) authentication(w http.ResponseWriter, r *http.Request) {
 		h.ResponseJsonErr(w, http.StatusInternalServerError, errStr)
 		return
 	}
-	if user == nil || user.Password != inputUser.Password {
+
+	isPasswordCompare := h.services.CheckPassword(user.Password, inputUser.Password)
+	if user == nil || isPasswordCompare != nil {
 		h.ResponseJsonErr(w, http.StatusUnauthorized, "credentials don't match")
 		return
 	}

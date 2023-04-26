@@ -24,19 +24,22 @@ import (
 
 	"github.com/lastbyte32/gofemart/internal/api/handlers"
 	"github.com/lastbyte32/gofemart/internal/config"
-	"github.com/lastbyte32/gofemart/internal/jwt"
 	"github.com/lastbyte32/gofemart/internal/service"
+	"github.com/lastbyte32/gofemart/internal/service/accrual"
+	"github.com/lastbyte32/gofemart/internal/service/jwt"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/order"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/user"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/withdraw"
 )
 
 const defaultCtxTimeout = time.Second * 30
+const migrationsPath = "file://migrations"
 
 type Configurator interface {
 	GetApiHost() string
 	GetDSN() string
 	GetSigningKey() string
+	GetAccrual() string
 }
 
 type app struct {
@@ -96,7 +99,20 @@ func (s *app) Run(ctx context.Context) error {
 		wg.Done()
 	}()
 
-	router, errRouter := s.configureRoutes()
+	tokenManager, err := jwt.NewManager(s.cfg.GetSigningKey())
+	if err != nil {
+		return err
+	}
+
+	withdrawStore := withdraw.NewStore(s.db)
+	orderStore := order.NewStore(s.db)
+	userStore := user.NewStore(s.db)
+
+	accrualClient := accrual.New(s.cfg.GetAccrual())
+
+	services := service.New(ctx, userStore, orderStore, withdrawStore, tokenManager, accrualClient)
+
+	router, errRouter := s.configureRoutes(services)
 	if errRouter != nil {
 		return errRouter
 	}
@@ -153,7 +169,7 @@ func (s *app) migrate() error {
 		return err
 	}
 
-	migrator, err := migrate.NewWithDatabaseInstance("file://migrations", "pgx", dbInstance)
+	migrator, err := migrate.NewWithDatabaseInstance(migrationsPath, "pgx", dbInstance)
 	if err != nil {
 		return err
 	}
@@ -163,23 +179,13 @@ func (s *app) migrate() error {
 	return nil
 }
 
-func (s *app) configureRoutes() (chi.Router, error) {
-
+func (s *app) configureRoutes(services *service.Services) (chi.Router, error) {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Heartbeat("/health"))
-
-	tokenManager, _ := jwt.NewManager(s.cfg.GetSigningKey())
-
-	withdrawStore := withdraw.NewStore(s.db)
-	orderStore := order.NewStore(s.db)
-	userStore := user.NewStore(s.db)
-	services := service.New(userStore, orderStore, withdrawStore, tokenManager)
-
 	baseHandler := handlers.New(s.logger, services)
 	baseHandler.Routes(router)
-
 	return router, nil
 }
 

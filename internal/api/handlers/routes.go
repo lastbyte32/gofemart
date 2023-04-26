@@ -13,6 +13,5 @@ func (h *baseHandler) Routes(router *chi.Mux) {
 		r.Get("/api/user/orders", h.getOrders)
 		r.Get("/api/user/balance", h.getBalance)
 		r.Post("/api/user/balance/withdraw", h.withdraw)
-
 	})
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func (h *baseHandler) registration(w http.ResponseWriter, r *http.Request) {
-	var user dto.CreateUser
+	var user dto.Credentials
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		h.ResponseJsonErr(w, http.StatusBadRequest, "invalid request")
@@ -47,6 +47,6 @@ func (h *baseHandler) registration(w http.ResponseWriter, r *http.Request) {
 		h.ResponseJsonErr(w, http.StatusInternalServerError, errStr)
 		return
 	}
-
 	w.Header().Set(AuthorizationHeader, token)
+	h.logger.Info().Str("login", user.Login).Msg("user created successfully")
 }

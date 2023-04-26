@@ -15,6 +15,36 @@ type store struct {
 	db *sqlx.DB
 }
 
+func (s *store) UpdateOrder(ctx context.Context, info *domain.AccrualOrderInfo) error {
+	order := struct {
+		Accrual float64
+		Status  string
+		Number  string
+	}{
+		Accrual: info.Accrual,
+		Status:  info.Status,
+		Number:  info.Order,
+	}
+
+	_, err := s.db.NamedQueryContext(ctx, sqlUpdate, order)
+	if err != nil {
+		return errors.Wrap(err, "update order err")
+	}
+	return nil
+
+}
+
+func (s *store) GetOrdersUnprocessed(ctx context.Context) ([]*domain.Order, error) {
+	var orders []*domain.Order
+	if err := s.db.SelectContext(ctx, &orders, sqlGetOrdersUnpocessed, domain.OrderNew, domain.OrderInProcessing); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return orders, nil
+}
+
 func (s *store) Create(ctx context.Context, order domain.Order) (*domain.Order, error) {
 	_, err := s.db.NamedQueryContext(ctx, sqlInsert, order)
 	if err != nil {

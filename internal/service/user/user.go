@@ -1,4 +1,4 @@
-package service
+package user
 
 import (
 	"context"
@@ -7,9 +7,10 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/lastbyte32/gofemart/internal/domain"
-	"github.com/lastbyte32/gofemart/internal/jwt"
+	"github.com/lastbyte32/gofemart/internal/service/jwt"
 	"github.com/lastbyte32/gofemart/internal/storage"
 )
 
@@ -21,6 +22,7 @@ type User interface {
 	GenerateBearerToken(login string) (string, error)
 	Withdraw(ctx context.Context, userID, orderNumber string, sum float64) error
 	GetBalance(ctx context.Context, userID string) (*domain.Balance, error)
+	CheckPassword(hashedPassword, providedPassword string) error
 }
 
 type user struct {
@@ -79,14 +81,34 @@ func (s *user) Registration(ctx context.Context, login, password string) (*domai
 	if err != nil {
 		return nil, errors.Errorf("failed to generate UUID: %v", err)
 	}
+
+	hashedPassword, err := s.hashPassword(password)
+	if err != nil {
+		return nil, err
+	}
 	user := domain.User{
 		ID:       id.String(),
 		Login:    login,
-		Password: password,
+		Password: hashedPassword,
 	}
 	return s.store.Create(ctx, user)
 }
 
-func NewUserService(auth jwt.TokenManager, store storage.User, w storage.Withdraw) User {
+func (s *user) hashPassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
+func (s *user) CheckPassword(hashedPassword, providedPassword string) error {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(providedPassword)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func NewService(auth jwt.TokenManager, store storage.User, w storage.Withdraw) User {
 	return &user{store: store, auth: auth, withdrawSrv: w}
 }

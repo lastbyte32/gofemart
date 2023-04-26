@@ -85,7 +85,6 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 		if _, ok := jwtT.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("err signing %v", jwtT.Header["alg"])
 		}
-		fmt.Println(jwtT.Header["alg"])
 		return []byte(m.signingKey), nil
 	})
 

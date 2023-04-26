@@ -1,20 +1,29 @@
 package service
 
 import (
-	"github.com/lastbyte32/gofemart/internal/jwt"
+	"context"
+
+	"github.com/lastbyte32/gofemart/internal/domain"
+	"github.com/lastbyte32/gofemart/internal/service/jwt"
+	"github.com/lastbyte32/gofemart/internal/service/order"
+	"github.com/lastbyte32/gofemart/internal/service/user"
 	"github.com/lastbyte32/gofemart/internal/storage"
 )
 
-type Services struct {
-	jwt.TokenManager
-	User
-	Order
+type accrualGetter interface {
+	GetOrder(ctx context.Context, number string) (*domain.AccrualOrderInfo, error)
 }
 
-func New(user storage.User, order storage.Order, withdraw storage.Withdraw, token jwt.TokenManager) *Services {
+type Services struct {
+	jwt.TokenManager
+	user.User
+	order.Order
+}
+
+func New(ctx context.Context, u storage.User, o storage.Order, withdraw storage.Withdraw, token jwt.TokenManager, client accrualGetter) *Services {
 	return &Services{
 		TokenManager: token,
-		User:         NewUserService(token, user, withdraw),
-		Order:        NewOrderService(order),
+		User:         user.NewService(token, u, withdraw),
+		Order:        order.NewService(ctx, o, client),
 	}
 }
