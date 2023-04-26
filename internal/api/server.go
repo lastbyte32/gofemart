@@ -22,14 +22,16 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
-	"github.com/lastbyte32/gofemart/internal/api/handler"
+	"github.com/lastbyte32/gofemart/internal/api/handlers"
 	"github.com/lastbyte32/gofemart/internal/config"
 	"github.com/lastbyte32/gofemart/internal/jwt"
 	"github.com/lastbyte32/gofemart/internal/service"
-	"github.com/lastbyte32/gofemart/internal/storage/postgres"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/order"
+	"github.com/lastbyte32/gofemart/internal/storage/postgres/user"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/withdraw"
 )
+
+const defaultCtxTimeout = time.Second * 30
 
 type Configurator interface {
 	GetApiHost() string
@@ -37,20 +39,19 @@ type Configurator interface {
 	GetSigningKey() string
 }
 
-type Server struct {
+type app struct {
 	logger *zerolog.Logger
 	http   *http.Server
 	db     *sqlx.DB
 	cfg    Configurator
 }
 
-func New() (*Server, error) {
+func New() (*app, error) {
 
 	c, err := config.New()
 	if err != nil {
 		return nil, err
 	}
-
 	zero := zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).
 		Level(zerolog.TraceLevel).
 		With().
@@ -66,20 +67,20 @@ func New() (*Server, error) {
 		IdleTimeout:       30 * time.Second,
 	}
 
-	return &Server{
+	return &app{
 		logger: &zero,
 		http:   server,
 		cfg:    c,
 	}, nil
 }
 
-func (s *Server) Run(ctx context.Context) error {
+func (s *app) Run(ctx context.Context) error {
 	db, err := s.configureDataBase(ctx, s.cfg.GetDSN())
 	if err != nil {
 		return err
 	}
 	s.db = db
-	if err := s.Migrate(); err != nil {
+	if err := s.migrate(); err != nil {
 		return err
 	}
 	s.logger.Info().Msg("database migrate complete")
@@ -101,7 +102,7 @@ func (s *Server) Run(ctx context.Context) error {
 	}
 	s.http.Handler = router
 
-	s.logger.Info().Msgf("starting the api-server on %s", s.http.Addr)
+	s.logger.Info().Msgf("starting the api-app on %s", s.http.Addr)
 	if err := s.http.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -110,14 +111,14 @@ func (s *Server) Run(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) stop() {
+func (s *app) stop() {
 	s.logger.Info().Msg("shutdown initiated")
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultCtxTimeout)
 	defer cancel()
 	if err := s.http.Shutdown(ctx); err != nil {
-		s.logger.Error().Msgf("shutdown api-server failed: %v", err)
+		s.logger.Error().Msgf("shutdown api-app failed: %v", err)
 	}
-	s.logger.Info().Msg("api-server stopped successfully")
+	s.logger.Info().Msg("api-app stopped successfully")
 
 	err := s.db.Close()
 	if err != nil {
@@ -127,7 +128,7 @@ func (s *Server) stop() {
 	s.logger.Info().Msg("shutdown completed")
 }
 
-func (s *Server) configureDataBase(ctx context.Context, dsn string) (*sqlx.DB, error) {
+func (s *app) configureDataBase(ctx context.Context, dsn string) (*sqlx.DB, error) {
 	s.logger.Info().Str("DSN", dsn).Msg("configure database")
 	if _, err := pgx.ParseConfig(dsn); err != nil {
 		return nil, fmt.Errorf("error dsn config: %w", err)
@@ -146,7 +147,7 @@ func (s *Server) configureDataBase(ctx context.Context, dsn string) (*sqlx.DB, e
 	return db, nil
 }
 
-func (s *Server) Migrate() error {
+func (s *app) migrate() error {
 	dbInstance, err := postgresMigrate.WithInstance(s.db.DB, &postgresMigrate.Config{})
 	if err != nil {
 		return err
@@ -162,29 +163,29 @@ func (s *Server) Migrate() error {
 	return nil
 }
 
-func (s *Server) configureRoutes() (chi.Router, error) {
+func (s *app) configureRoutes() (chi.Router, error) {
 
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	router.Use(middleware.StripSlashes)
 	router.Use(middleware.Heartbeat("/health"))
 
-	tokenManager, _ := jwt.NewManager("1234")
-	userStorage := postgres.NewUserStore(s.db)
-	orderStorage := order.NewOrderStore(s.db)
-	withdrawStorage := withdraw.NewStore(s.db)
-	orderService := service.NewOrderService(orderStorage)
+	tokenManager, _ := jwt.NewManager(s.cfg.GetSigningKey())
 
-	userService := service.NewUserService(userStorage, tokenManager, withdrawStorage)
+	withdrawStore := withdraw.NewStore(s.db)
+	orderStore := order.NewStore(s.db)
+	userStore := user.NewStore(s.db)
+	services := service.New(userStore, orderStore, withdrawStore, tokenManager)
 
-	userHandler := handler.NewUserHandler(
-		userService,
-		tokenManager,
-		orderService,
-	)
-	userHandler.Routes(router)
+	baseHandler := handlers.New(s.logger, services)
+	baseHandler.Routes(router)
 
+	return router, nil
+}
+
+func (s *app) printRoutes(router *chi.Mux) {
 	s.logger.Info().Msg("route list")
+
 	chi.Walk(router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		var middlewareNames []string
 		for _, mid := range middlewares {
@@ -195,6 +196,4 @@ func (s *Server) configureRoutes() (chi.Router, error) {
 		s.logger.Info().Msgf("[%s] %s (%s)", method, route, middlewareNamesStr)
 		return nil
 	})
-
-	return router, nil
 }

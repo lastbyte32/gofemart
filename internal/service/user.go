@@ -18,7 +18,7 @@ const defaultTTL = time.Minute * 60 * 24
 type User interface {
 	Registration(ctx context.Context, login, password string) (*domain.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*domain.User, error)
-	CreateToken(login string) (string, error)
+	GenerateBearerToken(login string) (string, error)
 	Withdraw(ctx context.Context, userID, orderNumber string, sum float64) error
 	GetBalance(ctx context.Context, userID string) (*domain.Balance, error)
 }
@@ -62,8 +62,12 @@ func (s *user) Withdraw(ctx context.Context, userID, orderNumber string, sum flo
 	return nil
 }
 
-func (s *user) CreateToken(login string) (string, error) {
-	return s.auth.NewJWT(login, defaultTTL)
+func (s *user) GenerateBearerToken(login string) (string, error) {
+	token, err := s.auth.NewJWT(login, defaultTTL)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Bearer %s", token), nil
 }
 
 func (s *user) GetUserByLogin(ctx context.Context, login string) (*domain.User, error) {
@@ -83,6 +87,6 @@ func (s *user) Registration(ctx context.Context, login, password string) (*domai
 	return s.store.Create(ctx, user)
 }
 
-func NewUserService(store storage.User, auth jwt.TokenManager, w storage.Withdraw) User {
+func NewUserService(auth jwt.TokenManager, store storage.User, w storage.Withdraw) User {
 	return &user{store: store, auth: auth, withdrawSrv: w}
 }

@@ -13,7 +13,7 @@ import (
 
 type TokenManager interface {
 	NewJWT(userId string, ttl time.Duration) (string, error)
-	Parse(accessToken string) (string, error)
+	ParseAuthorizationHeader(accessToken string) (string, error)
 	JWTMiddleware(next http.Handler) http.Handler
 }
 
@@ -43,7 +43,7 @@ func (m *manager) NewJWT(userID string, ttl time.Duration) (string, error) {
 	return token.SignedString([]byte(m.signingKey))
 }
 
-func (m *manager) Parse(accessToken string) (string, error) {
+func (m *manager) ParseAuthorizationHeader(accessToken string) (string, error) {
 	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (i any, err error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

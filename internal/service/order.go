@@ -9,20 +9,20 @@ import (
 )
 
 type Order interface {
-	IsNumberValid(number string) bool
-	Create(ctx context.Context, number, userId string) error
-	GetByUserID(ctx context.Context, userID string) ([]*domain.Order, error)
+	IsOrderNumberValid(number string) bool
+	UploadOrder(ctx context.Context, number, userId string) error
+	GetOrdersByUserID(ctx context.Context, userID string) ([]*domain.Order, error)
 }
 
 type order struct {
 	store storage.Order
 }
 
-func (s *order) GetByUserID(ctx context.Context, userID string) ([]*domain.Order, error) {
+func (s *order) GetOrdersByUserID(ctx context.Context, userID string) ([]*domain.Order, error) {
 	return s.store.GetOrdersByUserID(ctx, userID)
 }
 
-func (s *order) Create(ctx context.Context, number, userId string) error {
+func (s *order) UploadOrder(ctx context.Context, number, userId string) error {
 	newOrder := domain.Order{
 		Number: number,
 		UserID: userId,
@@ -47,7 +47,7 @@ func (s *order) Create(ctx context.Context, number, userId string) error {
 	return nil
 }
 
-func (s *order) IsNumberValid(number string) bool {
+func (s *order) IsOrderNumberValid(number string) bool {
 	return luhn.Validation(number)
 }
 

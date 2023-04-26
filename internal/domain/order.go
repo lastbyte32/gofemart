@@ -24,6 +24,12 @@ type Order struct {
 	UploadedAt UploadedAt  `json:"uploaded_at" db:"uploaded_at"`
 }
 
+type AccrualOrderInfo struct {
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
+}
+
 type UploadedAt struct {
 	time.Time
 }
