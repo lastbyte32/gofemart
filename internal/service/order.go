@@ -28,6 +28,19 @@ func (s *order) Create(ctx context.Context, number, userId string) error {
 		UserID: userId,
 		Status: domain.OrderNew,
 	}
+	order, err := s.store.GetByNumber(ctx, number)
+	if err != nil {
+		return err
+	}
+
+	if order != nil && order.UserID == userId {
+		return domain.ErrDuplicateOrderUploadSameUser
+	}
+
+	if order != nil && order.UserID != userId {
+		return domain.ErrDuplicateOrderUploadOtherUser
+	}
+
 	if _, err := s.store.Create(ctx, newOrder); err != nil {
 		return err
 	}

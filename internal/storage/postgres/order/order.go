@@ -34,6 +34,17 @@ func (s *orderStore) GetByNumber(ctx context.Context, number string) (*domain.Or
 	return &user, nil
 }
 
+func (s *orderStore) GetByUserIdAndNumber(ctx context.Context, userID, number string) (*domain.Order, error) {
+	var user domain.Order
+	if err := s.db.GetContext(ctx, &user, sqlGetByUserIdAndNumber, userID, number); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (s *orderStore) GetOrdersByUserID(ctx context.Context, userID string) ([]*domain.Order, error) {
 	var orders []*domain.Order
 	if err := s.db.SelectContext(ctx, &orders, sqlGetByUserID, userID); err != nil {

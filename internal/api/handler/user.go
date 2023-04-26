@@ -140,12 +140,13 @@ func (h *userHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	orderNumber := string(body)
-
+	// не корректный запрос
 	if orderNumber == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(`{"error":"invalid request body."}`))
 		return
 	}
+	// не валидный номер заказа
 	if !h.order.IsNumberValid(orderNumber) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		_, _ = w.Write([]byte(`{"error":"invalid order number."}`))
@@ -163,6 +164,18 @@ func (h *userHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"error":"create order err"}`))
 		return
 	}
+	if err != nil && errors.Is(err, domain.ErrDuplicateOrderUploadOtherUser) {
+		w.WriteHeader(http.StatusConflict)
+		_, _ = w.Write([]byte(`{"error":"ErrDuplicateOrderUploadOtherUser"}`))
+		return
+	}
+
+	if err != nil && errors.Is(err, domain.ErrDuplicateOrderUploadSameUser) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"error":"ErrDuplicateOrderUploadSameUser"}`))
+		return
+	}
+
 	w.WriteHeader(http.StatusAccepted)
 }
 
