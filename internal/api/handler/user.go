@@ -159,11 +159,7 @@ func (h *userHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.order.Create(r.Context(), orderNumber, user.ID); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(`{"error":"create order err"}`))
-		return
-	}
+	err = h.order.Create(r.Context(), orderNumber, user.ID)
 	if err != nil && errors.Is(err, domain.ErrDuplicateOrderUploadOtherUser) {
 		w.WriteHeader(http.StatusConflict)
 		_, _ = w.Write([]byte(`{"error":"ErrDuplicateOrderUploadOtherUser"}`))
@@ -175,7 +171,12 @@ func (h *userHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"error":"ErrDuplicateOrderUploadSameUser"}`))
 		return
 	}
-
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println(err)
+		_, _ = w.Write([]byte(`{"error":"create order err"}`))
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }
 
