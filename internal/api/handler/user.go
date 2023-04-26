@@ -163,6 +163,7 @@ func (h *userHandler) uploadOrder(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`{"error":"create order err"}`))
 		return
 	}
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (h *userHandler) getAuthUser(ctx context.Context) (*domain.User, error) {
