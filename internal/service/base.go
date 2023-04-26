@@ -20,10 +20,10 @@ type Services struct {
 	order.Order
 }
 
-func New(ctx context.Context, u storage.User, o storage.Order, withdraw storage.Withdraw, token jwt.TokenManager, client accrualGetter) *Services {
+func New(u storage.User, o storage.Order, withdraw storage.Withdraw, token jwt.TokenManager) *Services {
 	return &Services{
 		TokenManager: token,
 		User:         user.NewService(token, u, withdraw),
-		Order:        order.NewService(ctx, o, client),
+		Order:        order.NewService(o),
 	}
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/lastbyte32/gofemart/internal/service"
 	"github.com/lastbyte32/gofemart/internal/service/accrual"
 	"github.com/lastbyte32/gofemart/internal/service/jwt"
+	"github.com/lastbyte32/gofemart/internal/service/worker"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/order"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/user"
 	"github.com/lastbyte32/gofemart/internal/storage/postgres/withdraw"
@@ -110,7 +111,9 @@ func (s *app) Run(ctx context.Context) error {
 
 	accrualClient := accrual.New(s.cfg.GetAccrual())
 
-	services := service.New(ctx, userStore, orderStore, withdrawStore, tokenManager, accrualClient)
+	w := worker.New(orderStore, accrualClient)
+	go w.Run(ctx)
+	services := service.New(userStore, orderStore, withdrawStore, tokenManager)
 
 	router, errRouter := s.configureRoutes(services)
 	if errRouter != nil {
