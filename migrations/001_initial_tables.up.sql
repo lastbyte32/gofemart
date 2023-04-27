@@ -26,8 +26,7 @@ CREATE TABLE withdrawals
 		user_id UUID NOT NULL,
 		order_number text NOT NULL,
 		sum float NOT NULL,
-		processed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		CONSTRAINT accruals_withdrawn_pkey PRIMARY KEY (id)
+		processed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMIT;
