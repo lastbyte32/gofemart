@@ -21,7 +21,7 @@ type Order struct {
 	UserID     string      `json:"-" db:"user_id"`
 	Status     OrderStatus `json:"status"`
 	Accrual    float64     `json:"accrual"`
-	UploadedAt UploadedAt  `json:"uploaded_at" db:"uploaded_at"`
+	UploadedAt SpecialDate `json:"uploaded_at" db:"uploaded_at"`
 }
 
 type AccrualOrderInfo struct {
@@ -30,32 +30,32 @@ type AccrualOrderInfo struct {
 	Accrual float64 `json:"accrual"`
 }
 
-type UploadedAt struct {
+type SpecialDate struct {
 	time.Time
 }
 
-func (c *UploadedAt) MarshalJSON() ([]byte, error) {
+func (c *SpecialDate) MarshalJSON() ([]byte, error) {
 	if c.Time.IsZero() {
 		return nil, nil
 	}
 	return []byte(fmt.Sprintf(`"%s"`, c.Time.Format(time.RFC3339))), nil
 }
 
-func (c *UploadedAt) Value() (driver.Value, error) {
+func (c *SpecialDate) Value() (driver.Value, error) {
 	if c == nil {
 		return nil, nil
 	}
 	return c.Time, nil
 }
 
-func (c *UploadedAt) Scan(value any) error {
+func (c *SpecialDate) Scan(value any) error {
 	if value == nil {
 		c.Time = time.Time{}
 		return nil
 	}
 	t, ok := value.(time.Time)
 	if !ok {
-		return errors.New("invalid UploadedAt value")
+		return errors.New("invalid SpecialDate value")
 	}
 	c.Time = t
 	return nil

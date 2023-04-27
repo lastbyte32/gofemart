@@ -19,6 +19,7 @@ func (h *baseHandler) getWithdrawals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(withdrawals) == 0 {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}

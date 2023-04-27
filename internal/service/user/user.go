@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/lastbyte32/gofemart/internal/domain"
@@ -60,6 +61,7 @@ func (s *user) Withdraw(ctx context.Context, userID, orderNumber string, sum flo
 	if err != nil {
 		return err
 	}
+	log.Info().Float64("balance", balance.Current).Msgf("Withdraw: %f", sum)
 	if balance.Current < sum {
 		return domain.ErrNotEnoughFunds
 	}
