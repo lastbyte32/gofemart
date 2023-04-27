@@ -32,7 +32,7 @@ func (s *store) Create(ctx context.Context, userID, orderNumber string, sum floa
 		OrderNumber: orderNumber,
 		Sum:         sum,
 	}
-	_, err := s.db.NamedQueryContext(ctx, sqlInsert, withdraw)
+	_, err := s.db.NamedExecContext(ctx, sqlInsert, withdraw)
 	if err != nil {
 		return nil, errors.Wrap(err, "store err")
 	}

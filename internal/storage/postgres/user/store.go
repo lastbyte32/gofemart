@@ -28,7 +28,7 @@ func (s *store) GetByLogin(ctx context.Context, login string) (*domain.User, err
 }
 
 func (s *store) Create(ctx context.Context, u domain.User) (*domain.User, error) {
-	_, err := s.db.NamedQueryContext(ctx, sqlInsertUser, u)
+	_, err := s.db.NamedExecContext(ctx, sqlInsertUser, u)
 	if err != nil || err == sql.ErrNoRows {
 		return nil, errors.Wrap(err, "store err")
 	}
