@@ -12,9 +12,10 @@ import (
 )
 
 const (
-	CtxUserKey    = "userID"
-	ClaimsUserKey = "user_id"
+	CtxUserKey jwtKey = "userID"
 )
+
+type jwtKey string
 
 type TokenManager interface {
 	NewJWT(userID string, ttl time.Duration) (string, error)
@@ -114,7 +115,7 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 		_, _ = w.Write([]byte(`{"error":"claims err"}`))
 		return nil, errors.New("claims err")
 	}
-	ctx := context.WithValue(r.Context(), CtxUserKey, claims[ClaimsUserKey])
+	ctx := context.WithValue(r.Context(), CtxUserKey, claims["user_id"])
 
 	return ctx, nil
 }

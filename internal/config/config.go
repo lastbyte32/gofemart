@@ -39,7 +39,7 @@ func (c *config) env() error {
 func (c *config) flags() {
 
 	flag.StringVar(&c.AccrualHost, "r", defaultAccrualHost, "accrual system")
-	flag.StringVar(&c.APIHost, "a", defaultApiHost, "api host")
+	flag.StringVar(&c.APIHost, "a", defaultAPIHost, "api host")
 	flag.StringVar(&c.SigningKey, "k", defaultSigningKey, "key sign")
 	flag.StringVar(&c.DSN, "d", defaultDatabaseDSN, "dsn")
 	flag.Parse()

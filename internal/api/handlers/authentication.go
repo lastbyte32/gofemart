@@ -29,8 +29,13 @@ func (h *baseHandler) authentication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user == nil {
+		h.ResponseJSONErr(w, http.StatusUnauthorized, "credentials don't match")
+		return
+	}
+
 	isPasswordCompare := h.services.CheckPassword(user.Password, inputUser.Password)
-	if user == nil || isPasswordCompare != nil {
+	if isPasswordCompare != nil {
 		h.ResponseJSONErr(w, http.StatusUnauthorized, "credentials don't match")
 		return
 	}

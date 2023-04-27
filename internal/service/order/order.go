@@ -10,7 +10,7 @@ import (
 
 type Order interface {
 	IsOrderNumberValid(number string) bool
-	UploadOrder(ctx context.Context, number, userId string) error
+	UploadOrder(ctx context.Context, number, userID string) error
 	GetOrdersByUserID(ctx context.Context, userID string) ([]*domain.Order, error)
 }
 
