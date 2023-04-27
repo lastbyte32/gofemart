@@ -28,11 +28,11 @@ func (s *store) UpdateOrder(ctx context.Context, info *domain.AccrualOrderInfo) 
 		Status:  info.Status,
 		Number:  info.Order,
 	}
-	// nolint: rowserrcheck
-	_, err := s.db.NamedQueryContext(ctx, sqlUpdate, order)
+	rows, err := s.db.NamedQueryContext(ctx, sqlUpdate, order)
 	if err != nil {
 		return errors.Wrap(err, "store err")
 	}
+	defer func() { _ = rows.Close() }()
 	return nil
 }
 
