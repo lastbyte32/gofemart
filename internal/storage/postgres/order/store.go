@@ -28,11 +28,10 @@ func (s *store) UpdateOrder(ctx context.Context, info *domain.AccrualOrderInfo) 
 		Status:  info.Status,
 		Number:  info.Order,
 	}
-	rows, err := s.db.NamedQueryContext(ctx, sqlUpdate, order)
+	_, err := s.db.NamedExecContext(ctx, sqlUpdate, order)
 	if err != nil {
 		return errors.Wrap(err, "store err")
 	}
-	defer func() { _ = rows.Close() }()
 	return nil
 }
 
@@ -48,7 +47,7 @@ func (s *store) GetOrdersUnprocessed(ctx context.Context) ([]*domain.Order, erro
 }
 
 func (s *store) Create(ctx context.Context, order domain.Order) (*domain.Order, error) {
-	_, err := s.db.NamedQueryContext(ctx, sqlInsert, order)
+	_, err := s.db.NamedExecContext(ctx, sqlInsert, order)
 	if err != nil {
 		return nil, errors.Wrap(err, "store err")
 	}
