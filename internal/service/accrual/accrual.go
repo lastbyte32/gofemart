@@ -31,7 +31,11 @@ func (s *service) GetOrder(ctx context.Context, number string) (*domain.AccrualO
 	url := fmt.Sprintf("/api/orders/%s", number)
 	var order domain.AccrualOrderInfo
 
-	response, err := s.client.R().SetResult(order).SetContext(ctx).Get(url)
+	response, err := s.client.R().
+		SetResult(&order).
+		SetContext(ctx).
+		EnableTrace().
+		Get(url)
 	if err != nil {
 		return nil, errors.New("accrual is not available")
 	}
