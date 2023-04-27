@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -16,6 +17,8 @@ type store struct {
 }
 
 func (s *store) UpdateOrder(ctx context.Context, info *domain.AccrualOrderInfo) error {
+
+	fmt.Println("store -> UpdateOrder")
 	order := struct {
 		Accrual float64
 		Status  string

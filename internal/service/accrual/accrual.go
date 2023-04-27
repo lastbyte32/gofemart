@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/rs/zerolog/log"
 
 	"github.com/lastbyte32/gofemart/internal/domain"
 )
@@ -38,5 +39,6 @@ func (s *service) GetOrder(ctx context.Context, number string) (*domain.AccrualO
 		return nil, errors.New(fmt.Sprintf("accrual api call failed: %s", response.Status()))
 	}
 
+	log.Info().Msgf("accrual response: order %s, status: %s, sum %f", order.Order, order.Status, order.Accrual)
 	return &order, nil
 }
