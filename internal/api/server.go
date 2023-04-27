@@ -37,7 +37,7 @@ const defaultCtxTimeout = time.Second * 30
 const migrationsPath = "file://migrations"
 
 type Configurator interface {
-	GetApiHost() string
+	GetAPIHost() string
 	GetDSN() string
 	GetSigningKey() string
 	GetAccrual() string
@@ -66,7 +66,7 @@ func New() (*app, error) {
 		Logger()
 
 	server := &http.Server{
-		Addr:              c.GetApiHost(),
+		Addr:              c.GetAPIHost(),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       30 * time.Second,
 	}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/lastbyte32/gofemart/internal/domain"
 	"github.com/lastbyte32/gofemart/internal/service"
+	"github.com/lastbyte32/gofemart/internal/service/jwt"
 )
 
 const AuthorizationHeader = "Authorization"
@@ -28,7 +29,7 @@ func New(l *zerolog.Logger, s *service.Services) *baseHandler {
 }
 
 func (h *baseHandler) getAuthUser(ctx context.Context) (*domain.User, error) {
-	id := ctx.Value("userID").(string)
+	id := ctx.Value(jwt.CtxUserKey).(string)
 	if id == "" {
 		return nil, errors.New("value not found")
 	}
@@ -42,7 +43,7 @@ func (h *baseHandler) getAuthUser(ctx context.Context) (*domain.User, error) {
 	return user, nil
 }
 
-func (h *baseHandler) ResponseJson(w http.ResponseWriter, status int, result any) {
+func (h *baseHandler) ResponseJSON(w http.ResponseWriter, status int, result any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	var payload []byte
@@ -55,7 +56,7 @@ func (h *baseHandler) ResponseJson(w http.ResponseWriter, status int, result any
 	w.Write(payload)
 }
 
-func (h *baseHandler) ResponseJsonErr(w http.ResponseWriter, status int, message string) {
+func (h *baseHandler) ResponseJSONErr(w http.ResponseWriter, status int, message string) {
 	h.logger.Warn().Msg(message)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

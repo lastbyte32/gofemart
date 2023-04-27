@@ -11,15 +11,20 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+const (
+	CtxUserKey    = "userID"
+	ClaimsUserKey = "user_id"
+)
+
 type TokenManager interface {
-	NewJWT(userId string, ttl time.Duration) (string, error)
+	NewJWT(userID string, ttl time.Duration) (string, error)
 	ParseAuthorizationHeader(accessToken string) (string, error)
 	JWTMiddleware(next http.Handler) http.Handler
 }
 
 type claims struct {
 	jwt.StandardClaims
-	UserId string `json:"user_id"`
+	UserID string `json:"user_id"`
 }
 
 type manager struct {
@@ -38,7 +43,7 @@ func (m *manager) NewJWT(userID string, ttl time.Duration) (string, error) {
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(ttl).Unix(),
 		},
-		UserId: userID,
+		UserID: userID,
 	})
 	return token.SignedString([]byte(m.signingKey))
 }
@@ -109,7 +114,7 @@ func (m *manager) checkToken(w http.ResponseWriter, r *http.Request) (context.Co
 		_, _ = w.Write([]byte(`{"error":"claims err"}`))
 		return nil, errors.New("claims err")
 	}
-	ctx := context.WithValue(r.Context(), "userID", claims["user_id"])
+	ctx := context.WithValue(r.Context(), CtxUserKey, claims[ClaimsUserKey])
 
 	return ctx, nil
 }

@@ -22,10 +22,10 @@ func (s *order) GetOrdersByUserID(ctx context.Context, userID string) ([]*domain
 	return s.store.GetOrdersByUserID(ctx, userID)
 }
 
-func (s *order) UploadOrder(ctx context.Context, number, userId string) error {
+func (s *order) UploadOrder(ctx context.Context, number, userID string) error {
 	newOrder := domain.Order{
 		Number: number,
-		UserID: userId,
+		UserID: userID,
 		Status: domain.OrderNew,
 	}
 	order, err := s.store.GetByNumber(ctx, number)
@@ -33,11 +33,11 @@ func (s *order) UploadOrder(ctx context.Context, number, userId string) error {
 		return err
 	}
 
-	if order != nil && order.UserID == userId {
+	if order != nil && order.UserID == userID {
 		return domain.ErrDuplicateOrderUploadSameUser
 	}
 
-	if order != nil && order.UserID != userId {
+	if order != nil && order.UserID != userID {
 		return domain.ErrDuplicateOrderUploadOtherUser
 	}
 

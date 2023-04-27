@@ -30,8 +30,8 @@ func (s *store) UpdateOrder(ctx context.Context, info *domain.AccrualOrderInfo) 
 	}
 
 	_, err := s.db.NamedQueryContext(ctx, sqlUpdate, order)
-	if err != nil {
-		return errors.Wrap(err, "update order err")
+	if err != nil || err == sql.ErrNoRows {
+		return errors.Wrap(err, "store err")
 	}
 	return nil
 
