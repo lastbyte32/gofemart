@@ -10,8 +10,10 @@ func (h *baseHandler) Routes(router *chi.Mux) {
 	router.Group(func(r chi.Router) {
 		r.Use(h.services.JWTMiddleware)
 		r.Post("/api/user/orders", h.uploadOrder)
+		r.Post("/api/user/balance/withdraw", h.withdraw)
 		r.Get("/api/user/orders", h.getOrders)
 		r.Get("/api/user/balance", h.getBalance)
-		r.Post("/api/user/balance/withdraw", h.withdraw)
+		r.Get("/api/user/withdrawals", h.getWithdrawals)
+
 	})
 }

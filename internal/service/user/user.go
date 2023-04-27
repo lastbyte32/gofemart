@@ -23,6 +23,7 @@ type User interface {
 	Withdraw(ctx context.Context, userID, orderNumber string, sum float64) error
 	GetBalance(ctx context.Context, userID string) (*domain.Balance, error)
 	CheckPassword(hashedPassword, providedPassword string) error
+	Withdrawals(ctx context.Context, userID string) ([]*domain.Withdraw, error)
 }
 
 type user struct {
@@ -48,6 +49,10 @@ func (s *user) GetBalance(ctx context.Context, userID string) (*domain.Balance, 
 		Current:   accrualAmount - withdrawalsAmount,
 		Withdrawn: withdrawalsAmount,
 	}, nil
+}
+
+func (s *user) Withdrawals(ctx context.Context, userID string) ([]*domain.Withdraw, error) {
+	return s.withdrawSrv.GetByUserID(ctx, userID)
 }
 
 func (s *user) Withdraw(ctx context.Context, userID, orderNumber string, sum float64) error {
