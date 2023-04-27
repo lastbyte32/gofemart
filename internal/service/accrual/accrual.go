@@ -10,24 +10,19 @@ import (
 	"github.com/go-resty/resty/v2"
 
 	"github.com/lastbyte32/gofemart/internal/domain"
-	"github.com/lastbyte32/gofemart/internal/storage"
 )
 
 const defaultTimeout = time.Second * 10
 
 type service struct {
-	client  *resty.Client
-	store   storage.Order
-	baseURL string
-	retryAt *time.Time
+	client *resty.Client
 }
 
 func New(accrualUrl string) *service {
-	client := resty.New().SetTimeout(defaultTimeout)
+	client := resty.New().SetTimeout(defaultTimeout).SetBaseURL(accrualUrl)
 
 	return &service{
-		client:  client,
-		baseURL: accrualUrl,
+		client: client,
 	}
 }
 

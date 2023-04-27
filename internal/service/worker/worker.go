@@ -24,7 +24,7 @@ func (s *work) orderProcessing(ctx context.Context, wg *sync.WaitGroup, number s
 
 	info, err := s.client.GetOrder(ctx, number)
 	if err != nil {
-		fmt.Println("Failed to request order status from accrual system" + err.Error())
+		fmt.Println("accrual request failed: " + err.Error())
 		wg.Done()
 		return
 	}
